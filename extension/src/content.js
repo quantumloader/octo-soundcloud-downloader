@@ -1,4 +1,5 @@
 (() => {
+  const CHANNEL = "octo-sc-bridge";
   const DOWNLOAD_ICON = `
     <span class="octo-sc-btn__icon" aria-hidden="true">
       <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
@@ -34,6 +35,7 @@
     const observer = new MutationObserver(() => scheduleEnhance());
     observer.observe(document.documentElement, { childList: true, subtree: true });
     scheduleEnhance();
+    syncSession().catch(() => {});
   }
 
   function loadSettings() {
@@ -79,7 +81,7 @@
   }
 
   function isPlaylistPath(pathname = location.pathname) {
-    return /\/sets\//.test(pathname);
+    return /\/[^/]+\/sets\/[^/]+/.test(pathname);
   }
 
   function isTrackPath(pathname = location.pathname) {
@@ -117,10 +119,7 @@
 
   function injectPlaylistButton() {
     if (!isPlaylistPath()) return;
-    const actions =
-      document.querySelector(".listenEngagement__actions .sc-button-group") ||
-      document.querySelector(".soundActions .sc-button-group") ||
-      document.querySelector(".fullHero__toolbar .sc-button-group");
+    const actions = findActionGroup();
     if (!actions) return;
     if (actions.querySelector("[data-octo-playlist-btn]")) return;
 
@@ -134,9 +133,36 @@
       event.preventDefault();
       event.stopPropagation();
       await runButtonAction(btn, async () => {
+        const session = await readPageSession();
+        const playlistTitle = readPlaylistTitle();
+        const domTracks = collectPlaylistTracksFromDom();
+        const hydrationPlaylist = session?.hydration?.playlist;
+
         const response = await send({
           type: "DOWNLOAD_PLAYLIST",
-          url: pagePermalink()
+          url: pagePermalink(),
+          id: hydrationPlaylist?.id,
+          resource: hydrationPlaylist || undefined,
+          session: {
+            clientId: session?.clientId,
+            oauthToken: session?.oauthToken
+          },
+          options: {
+            playlistTitle:
+              hydrationPlaylist?.title || playlistTitle || "Playlist",
+            playlistId: hydrationPlaylist?.id,
+            tracks: domTracks.length
+              ? domTracks
+              : (hydrationPlaylist?.tracks || [])
+                  .filter((t) => t?.permalink_url || t?.id)
+                  .map((t, index) => ({
+                    url: t.permalink_url,
+                    id: t.id,
+                    title: t.title,
+                    index: index + 1,
+                    resource: t.media ? t : undefined
+                  }))
+          }
         });
         setStatus(
           `Saved ${response.downloaded}/${response.downloaded + response.failed}`
@@ -146,7 +172,7 @@
 
     actions.appendChild(btn);
 
-    if (!document.querySelector("[data-octo-status]")) {
+    if (!actions.querySelector("[data-octo-status]")) {
       const status = document.createElement("span");
       status.className = "octo-sc-status";
       status.setAttribute("data-octo-status", "1");
@@ -156,10 +182,7 @@
 
   function injectHeroTrackButton() {
     if (!isTrackPath()) return;
-    const actions =
-      document.querySelector(".listenEngagement__actions .sc-button-group") ||
-      document.querySelector(".soundActions .sc-button-group") ||
-      document.querySelector(".fullHero__toolbar .sc-button-group");
+    const actions = findActionGroup();
     if (!actions) return;
     if (actions.querySelector("[data-octo-track-btn='hero']")) return;
 
@@ -172,7 +195,17 @@
       event.preventDefault();
       event.stopPropagation();
       await runButtonAction(btn, async () => {
-        await send({ type: "DOWNLOAD_TRACK", url: pagePermalink() });
+        const session = await readPageSession();
+        await send({
+          type: "DOWNLOAD_TRACK",
+          url: pagePermalink(),
+          id: session?.hydration?.sound?.id,
+          resource: session?.hydration?.sound || undefined,
+          session: {
+            clientId: session?.clientId,
+            oauthToken: session?.oauthToken
+          }
+        });
       });
     });
 
@@ -184,7 +217,7 @@
       ".soundList__item, .trackList__item, .systemPlaylistTrackList__item, li[class*='trackList__item']"
     );
 
-    items.forEach((item) => {
+    items.forEach((item, index) => {
       if (item.querySelector("[data-octo-track-btn='row']")) return;
 
       const link =
@@ -215,20 +248,75 @@
         event.preventDefault();
         event.stopPropagation();
         await runButtonAction(btn, async () => {
-          const playlistTitle = isPlaylistPath()
-            ? document.querySelector(".soundTitle__title span, .fullHero__title .soundTitle__title")
-                ?.textContent?.trim()
-            : undefined;
+          const session = await readPageSession();
+          const playlistTitle = isPlaylistPath() ? readPlaylistTitle() : undefined;
           await send({
             type: "DOWNLOAD_TRACK",
             url: href,
-            options: playlistTitle ? { playlistTitle } : {}
+            session: {
+              clientId: session?.clientId,
+              oauthToken: session?.oauthToken
+            },
+            options: playlistTitle
+              ? { playlistTitle, index: index + 1 }
+              : {}
           });
         });
       });
 
       actions.appendChild(btn);
     });
+  }
+
+  function findActionGroup() {
+    return (
+      document.querySelector(".listenEngagement__actions .sc-button-group") ||
+      document.querySelector(".soundActions .sc-button-group") ||
+      document.querySelector(".fullHero__toolbar .sc-button-group")
+    );
+  }
+
+  function readPlaylistTitle() {
+    return (
+      document
+        .querySelector(
+          ".fullHero__title .soundTitle__title span, .soundTitle__titleHero span, .soundTitle__title span"
+        )
+        ?.textContent?.trim() ||
+      document.querySelector("h1")?.textContent?.trim() ||
+      "Playlist"
+    );
+  }
+
+  function collectPlaylistTracksFromDom() {
+    const items = [
+      ...document.querySelectorAll(
+        ".trackList__item, .systemPlaylistTrackList__item, .soundList__item, li[class*='trackList__item']"
+      )
+    ];
+    const tracks = [];
+    items.forEach((item, index) => {
+      const link =
+        item.querySelector("a.trackItem__trackTitle") ||
+        item.querySelector("a.soundTitle__title") ||
+        item.querySelector("a[href^='/'][class*='Title']");
+      if (!link) return;
+      const url = absoluteSoundUrl(link.getAttribute("href"));
+      if (!url || /\/sets\//.test(url)) return;
+      const artist =
+        item
+          .querySelector(
+            ".trackItem__username, .soundTitle__username, a[class*='username']"
+          )
+          ?.textContent?.trim() || undefined;
+      tracks.push({
+        url,
+        title: link.textContent?.trim() || undefined,
+        artist,
+        index: index + 1
+      });
+    });
+    return tracks;
   }
 
   function createButton({ label, primary = false, compact = false, attrs = {} }) {
@@ -269,7 +357,7 @@
         btn.classList.remove("is-error");
         if (label && previous) label.textContent = previous;
       }, 2200);
-      throw error;
+      // Do not rethrow — avoids Chrome extension error badge spam
     } finally {
       btn.classList.remove("is-busy");
       btn.disabled = false;
@@ -299,8 +387,8 @@
       const url = new URL(href, location.href);
       if (!url.hostname.endsWith("soundcloud.com")) return null;
       const path = url.pathname.replace(/\/+/g, "/").replace(/\/+$/, "");
-      // Skip non-track/playlist resource paths
       if (!/^\/[^/]+\/.+/.test(path)) return null;
+      if (path.startsWith("/you/")) return null;
       return `https://soundcloud.com${path}`;
     } catch {
       return null;
@@ -318,5 +406,49 @@
     const running = jobs.find((j) => j.type === "playlist" && j.status === "running");
     if (!running) return;
     setStatus(`${running.done}/${running.total}`);
+  }
+
+  async function syncSession() {
+    const session = await readPageSession();
+    if (!session?.clientId && !session?.oauthToken) return;
+    await send({
+      type: "SET_SESSION",
+      session: {
+        clientId: session.clientId,
+        oauthToken: session.oauthToken
+      }
+    });
+  }
+
+  function readPageSession() {
+    return new Promise((resolve) => {
+      const requestId = `req-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const timer = setTimeout(() => {
+        window.removeEventListener("message", onMessage);
+        resolve(null);
+      }, 800);
+
+      function onMessage(event) {
+        if (event.source !== window) return;
+        const data = event.data;
+        if (
+          !data ||
+          data.channel !== CHANNEL ||
+          data.direction !== "response" ||
+          data.requestId !== requestId
+        ) {
+          return;
+        }
+        clearTimeout(timer);
+        window.removeEventListener("message", onMessage);
+        resolve(data.payload || null);
+      }
+
+      window.addEventListener("message", onMessage);
+      window.postMessage(
+        { channel: CHANNEL, direction: "request", requestId },
+        "*"
+      );
+    });
   }
 })();

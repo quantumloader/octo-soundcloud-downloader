@@ -33,5 +33,6 @@ Filename tokens: `{artist}`, `{title}`, `{playlist}`, `{index}`, `{id}`.
 ## Notes
 
 - Works with public streamable tracks and playlists.
-- Private or geo-blocked items may not download.
+- Private playlists/tracks need an active SoundCloud login in the same browser.
+- On long playlists, scroll until tracks are visible before **Download playlist**.
 - When an artist enables SoundCloud’s own download, that original file is preferred.
