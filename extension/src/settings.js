@@ -48,19 +48,27 @@ export function applyFilenamePattern(pattern, values) {
       .replace(/\{index\}\s*/g, "");
   }
 
+  const safe = {
+    artist: sanitizeFilename(values.artist ?? "Unknown"),
+    title: sanitizeFilename(values.title ?? "Untitled"),
+    playlist: sanitizeFilename(values.playlist ?? "Playlist"),
+    index: hasIndex ? sanitizeFilename(String(values.index)) : "",
+    id: sanitizeFilename(values.id ?? "")
+  };
+
   filled = filled
-    .replaceAll("{artist}", values.artist ?? "Unknown")
-    .replaceAll("{title}", values.title ?? "Untitled")
-    .replaceAll("{playlist}", values.playlist ?? "Playlist")
-    .replaceAll("{index}", hasIndex ? String(values.index) : "")
-    .replaceAll("{id}", values.id ?? "");
+    .replaceAll("{artist}", safe.artist)
+    .replaceAll("{title}", safe.title)
+    .replaceAll("{playlist}", safe.playlist)
+    .replaceAll("{index}", safe.index)
+    .replaceAll("{id}", safe.id);
 
   filled = filled
     .replace(/\s{2,}/g, " ")
-    .replace(/\s+([./])/g, "$1")
-    .replace(/([./])\s+/g, "$1")
+    .replace(/\s*\/\s*/g, "/")
     .replace(/\/{2,}/g, "/")
-    .replace(/^\/+|\/+$/g, "");
+    .replace(/^\/+|\/+$/g, "")
+    .trim();
 
   const parts = filled
     .split("/")
