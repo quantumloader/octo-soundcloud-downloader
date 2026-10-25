@@ -74,7 +74,8 @@
   }
 
   function pagePermalink() {
-    return `${location.origin}${location.pathname.replace(/\/+$/, "")}`;
+    const path = location.pathname.replace(/\/+/g, "/").replace(/\/+$/, "");
+    return `https://soundcloud.com${path}`;
   }
 
   function isPlaylistPath(pathname = location.pathname) {
@@ -295,11 +296,12 @@
   function absoluteSoundUrl(href) {
     if (!href) return null;
     try {
-      const url = new URL(href, location.origin);
+      const url = new URL(href, location.href);
       if (!url.hostname.endsWith("soundcloud.com")) return null;
-      url.hash = "";
-      url.search = "";
-      return `${url.origin}${url.pathname.replace(/\/+$/, "")}`;
+      const path = url.pathname.replace(/\/+/g, "/").replace(/\/+$/, "");
+      // Skip non-track/playlist resource paths
+      if (!/^\/[^/]+\/.+/.test(path)) return null;
+      return `https://soundcloud.com${path}`;
     } catch {
       return null;
     }

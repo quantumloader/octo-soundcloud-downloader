@@ -164,7 +164,8 @@ async function enqueueTrackDownload(track, context = {}) {
         ? String(context.index)
         : "";
 
-  const pattern = context.playlistTitle
+  const usePlaylistPattern = Boolean(context.playlistTitle) && Boolean(indexValue);
+  const pattern = usePlaylistPattern
     ? settings.playlistFilenamePattern
     : settings.filenamePattern;
 
@@ -176,18 +177,41 @@ async function enqueueTrackDownload(track, context = {}) {
     id: meta.id
   });
 
-  const filename = `${baseName}.${source.ext}`;
+  const filename = buildDownloadFilename(baseName, source.ext);
   const downloadUrl =
     source.mode === "buffer"
       ? await bufferToDownloadUrl(source.buffer, source.mime)
       : source.url;
 
-  const downloadId = await chrome.downloads.download({
-    url: downloadUrl,
-    filename,
-    conflictAction: "uniquify",
-    saveAs: false
-  });
+  let downloadId;
+  try {
+    downloadId = await chrome.downloads.download({
+      url: downloadUrl,
+      filename,
+      conflictAction: "uniquify",
+      saveAs: false
+    });
+  } catch (error) {
+    // Last-resort flat name if Chrome still rejects the path
+    if (/invalid filename/i.test(error?.message || "")) {
+      const fallback = buildDownloadFilename(
+        applyFilenamePattern("{artist} - {title}", {
+          artist: meta.artist,
+          title: meta.title,
+          id: meta.id
+        }),
+        source.ext
+      );
+      downloadId = await chrome.downloads.download({
+        url: downloadUrl,
+        filename: fallback,
+        conflictAction: "uniquify",
+        saveAs: false
+      });
+    } else {
+      throw error;
+    }
+  }
 
   return {
     downloadId,
@@ -195,6 +219,16 @@ async function enqueueTrackDownload(track, context = {}) {
     quality: source.quality,
     track: meta
   };
+}
+
+function buildDownloadFilename(baseName, ext) {
+  const safeExt = String(ext || "m4a").replace(/[^a-z0-9]/gi, "") || "m4a";
+  const cleaned = String(baseName || "track")
+    .replace(/^\/+|\/+$/g, "")
+    .replace(/\/{2,}/g, "/");
+  const withExt = `${cleaned}.${safeExt}`;
+  // Chrome limit is generous; keep paths practical
+  return withExt.length > 200 ? `${cleaned.slice(0, 180)}.${safeExt}` : withExt;
 }
 
 async function bufferToDownloadUrl(buffer, mime) {

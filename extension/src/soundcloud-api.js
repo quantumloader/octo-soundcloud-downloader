@@ -103,10 +103,6 @@ async function apiFetch(path, params = {}, attempt = 0) {
   return response.json();
 }
 
-export async function resolveUrl(permalink) {
-  return apiFetch("/resolve", { url: permalink });
-}
-
 export async function fetchPlaylistTracks(playlist) {
   const tracks = [];
   const initial = (playlist.tracks || []).filter((t) => t && t.kind === "track" && t.title);
@@ -356,11 +352,30 @@ export async function getTrackDownloadSource(track, { preferOriginal = true } = 
 }
 
 export function normalizePermalink(rawUrl) {
-  const url = new URL(rawUrl);
-  url.hash = "";
-  url.search = "";
-  const path = url.pathname.replace(/\/+$/, "");
-  return `${url.origin}${path}`;
+  const url = new URL(rawUrl, "https://soundcloud.com");
+  // api-v2 /resolve only accepts soundcloud.com (not www / m)
+  const path = decodeURIComponent(url.pathname)
+    .replace(/\/+/g, "/")
+    .replace(/\/+$/, "");
+  return `https://soundcloud.com${path}`;
+}
+
+export async function resolveUrl(permalink) {
+  const normalized = normalizePermalink(permalink);
+  try {
+    return await apiFetch("/resolve", { url: normalized });
+  } catch (error) {
+    if (!String(error?.message || "").includes("404")) throw error;
+    // Retry without trailing resource suffixes occasionally present in UI links
+    const trimmed = normalized.replace(
+      /\/(likes|reposts|comments|sets|popular-tracks|tracks|albums|followers|following)$/i,
+      ""
+    );
+    if (trimmed !== normalized) {
+      return apiFetch("/resolve", { url: trimmed });
+    }
+    throw error;
+  }
 }
 
 export function detectPageKind(pathname) {
