@@ -1,0 +1,174 @@
+:root {
+  --sc-orange: #ff5500;
+  --sc-orange-hover: #ff7700;
+  --sc-bg: #ffffff;
+  --sc-text: #333333;
+  --sc-muted: #999999;
+  --sc-line: #e5e5e5;
+  --sc-soft: #f2f2f2;
+  --sc-input: #f7f7f7;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 340px;
+  color: var(--sc-text);
+  background:
+    linear-gradient(180deg, #fff 0%, #fafafa 100%);
+  font: 12px/1.45 "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Garuda,
+    Verdana, Tahoma, sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--sc-line);
+}
+
+.header__mark {
+  display: block;
+  border-radius: 4px;
+}
+
+.header__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--sc-orange);
+  line-height: 1.1;
+}
+
+.header__subtitle {
+  margin: 2px 0 0;
+  color: var(--sc-muted);
+  font-size: 11px;
+}
+
+.hint {
+  margin: 12px 16px 0;
+  color: var(--sc-muted);
+}
+
+.form {
+  padding: 12px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field--inline {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.field__label {
+  color: var(--sc-text);
+  font-weight: 700;
+}
+
+.field input[type="text"],
+.field select {
+  width: 100%;
+  height: 30px;
+  border: 1px solid var(--sc-line);
+  border-radius: 3px;
+  background: var(--sc-input);
+  color: var(--sc-text);
+  padding: 0 8px;
+  font: inherit;
+}
+
+.field select {
+  width: 64px;
+  flex: 0 0 64px;
+}
+
+.field input[type="text"]:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--sc-orange);
+  background: #fff;
+}
+
+.tokens {
+  margin: 0;
+  color: var(--sc-muted);
+}
+
+.tokens code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 10px;
+  background: var(--sc-soft);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.check input {
+  margin-top: 2px;
+  accent-color: var(--sc-orange);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--sc-line);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--sc-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.btn:hover {
+  border-color: #ccc;
+}
+
+.btn--primary {
+  border-color: var(--sc-orange);
+  background: var(--sc-orange);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  border-color: var(--sc-orange-hover);
+  background: var(--sc-orange-hover);
+}
+
+.save-status {
+  margin: 0;
+  color: var(--sc-orange);
+  font-weight: 700;
+}

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Octo SoundCloud Downloader</title>
+    <link rel="stylesheet" href="styles/popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <img class="header__mark" src="icons/icon32.png" alt="" width="20" height="20" />
+      <div class="header__text">
+        <h1 class="header__title">Octo</h1>
+        <p class="header__subtitle">SoundCloud downloader</p>
+      </div>
+    </header>
+
+    <p class="hint">
+      Download buttons appear on SoundCloud track and playlist pages. Use this panel for preferences only.
+    </p>
+
+    <form id="settings-form" class="form">
+      <label class="field">
+        <span class="field__label">Track filename</span>
+        <input
+          id="filenamePattern"
+          name="filenamePattern"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Playlist filename</span>
+        <input
+          id="playlistFilenamePattern"
+          name="playlistFilenamePattern"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </label>
+
+      <p class="tokens">
+        Tokens: <code>{artist}</code> <code>{title}</code> <code>{playlist}</code>
+        <code>{index}</code> <code>{id}</code>
+      </p>
+
+      <label class="check">
+        <input id="preferOriginal" name="preferOriginal" type="checkbox" />
+        <span>Prefer original file when the artist enables downloads</span>
+      </label>
+
+      <label class="check">
+        <input id="addTrackNumbers" name="addTrackNumbers" type="checkbox" />
+        <span>Zero-pad track numbers in playlists</span>
+      </label>
+
+      <label class="check">
+        <input id="showTrackButtons" name="showTrackButtons" type="checkbox" />
+        <span>Show Download on tracks</span>
+      </label>
+
+      <label class="check">
+        <input id="showPlaylistButton" name="showPlaylistButton" type="checkbox" />
+        <span>Show Download playlist on sets</span>
+      </label>
+
+      <label class="field field--inline">
+        <span class="field__label">Parallel playlist downloads</span>
+        <select id="concurrentDownloads" name="concurrentDownloads">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="btn btn--primary">Save</button>
+        <button type="button" id="reset-btn" class="btn">Reset</button>
+      </div>
+
+      <p id="save-status" class="save-status" hidden>Saved</p>
+    </form>
+
+    <script type="module" src="src/popup.js"></script>
+  </body>
+</html>

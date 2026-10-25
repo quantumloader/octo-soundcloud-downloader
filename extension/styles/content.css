@@ -1,0 +1,136 @@
+:root {
+  --octo-orange: #ff5500;
+  --octo-orange-hover: #ff7700;
+  --octo-text: #333;
+  --octo-muted: #999;
+  --octo-border: #e5e5e5;
+  --octo-surface: #fff;
+  --octo-surface-soft: #f2f2f2;
+}
+
+.octo-sc-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 26px;
+  min-width: 26px;
+  padding: 0 10px;
+  margin-left: 5px;
+  border: 1px solid var(--octo-border);
+  border-radius: 3px;
+  background: var(--octo-surface);
+  color: var(--octo-text);
+  font: 100 12px/1 "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Garuda, Verdana, Tahoma, sans-serif;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+  box-sizing: border-box;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.octo-sc-btn:hover {
+  border-color: #ccc;
+  color: #000;
+  background: #fafafa;
+}
+
+.octo-sc-btn:active {
+  background: var(--octo-surface-soft);
+}
+
+.octo-sc-btn[disabled],
+.octo-sc-btn.is-busy {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}
+
+.octo-sc-btn.is-done {
+  border-color: var(--octo-orange);
+  color: var(--octo-orange);
+}
+
+.octo-sc-btn.is-error {
+  border-color: #d84a4a;
+  color: #d84a4a;
+}
+
+.octo-sc-btn__icon {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  flex: 0 0 12px;
+}
+
+.octo-sc-btn__icon svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.octo-sc-btn--primary {
+  border-color: var(--octo-orange);
+  background: var(--octo-orange);
+  color: #fff;
+}
+
+.octo-sc-btn--primary:hover {
+  border-color: var(--octo-orange-hover);
+  background: var(--octo-orange-hover);
+  color: #fff;
+}
+
+.octo-sc-btn--compact {
+  padding: 0 8px;
+  height: 22px;
+  font-size: 11px;
+}
+
+.octo-sc-btn--icon-only {
+  width: 26px;
+  padding: 0;
+}
+
+.octo-sc-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.octo-sc-status {
+  display: none;
+  margin-left: 8px;
+  color: var(--octo-muted);
+  font: 100 12px/26px "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Garuda, Verdana, Tahoma, sans-serif;
+  vertical-align: middle;
+}
+
+.octo-sc-status.is-visible {
+  display: inline-block;
+}
+
+.theme-dark .octo-sc-btn,
+.g-dark .octo-sc-btn {
+  background: #111;
+  border-color: #333;
+  color: #ccc;
+}
+
+.theme-dark .octo-sc-btn:hover,
+.g-dark .octo-sc-btn:hover {
+  background: #1a1a1a;
+  border-color: #555;
+  color: #fff;
+}
+
+.theme-dark .octo-sc-btn--primary,
+.g-dark .octo-sc-btn--primary {
+  background: var(--octo-orange);
+  border-color: var(--octo-orange);
+  color: #fff;
+}

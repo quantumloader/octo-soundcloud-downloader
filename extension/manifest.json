@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "Octo SoundCloud Downloader",
+  "version": "1.0.0",
+  "description": "Download tracks and playlists from SoundCloud.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Octo SoundCloud Downloader",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://soundcloud.com/*", "https://m.soundcloud.com/*"],
+      "js": ["src/content.js"],
+      "css": ["styles/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": ["downloads", "storage", "scripting", "offscreen"],
+  "host_permissions": [
+    "https://soundcloud.com/*",
+    "https://m.soundcloud.com/*",
+    "https://api-v2.soundcloud.com/*",
+    "https://api.soundcloud.com/*",
+    "https://*.sndcdn.com/*",
+    "https://*.soundcloud.cloud/*"
+  ]
+}
